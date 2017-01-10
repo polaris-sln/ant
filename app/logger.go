@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	LOGINFO := 0
-	LOGERR  := 1
+	LOGINFO = 0
+	LOGERR  = 1
 )
 
 type Logger struct {
@@ -18,73 +18,77 @@ type Logger struct {
 	errFile    string
 	errFlags   int
 	errPrefix  string
-	logWriter  LogWriter
-}
-
-type LogWriter struct {
-	Writer   io.Writer
+	fileOpen   int
+	writer     *os.File
 }
 
 type LogMsg struct {
 	logType int
 	msg     string
-	logger  Logger
+	logger  *Logger
 }
 
-func NewLogMsg(logType int, msg string, logger Logger) LogMsg {
-	return LogMsg{logType, msg, logger,}
+func NewLogMsg(logType int, msg string, logger *Logger) *LogMsg {
+	return &LogMsg{logType, msg, logger,}
 }
 
 func (lm *LogMsg)Do() {
 	if lm.logType == LOGINFO {
-		logger.Info(lm.msg)
+		lm.logger.Info(lm.msg)
 	} else if lm.logType == LOGERR{
-		logger.Error(lm.msg)
+		lm.logger.Error(lm.msg)
 	}
 }
 
-func newLogWriter() *LogWriter {
-	return &LogWriter{os.Stdout,}
-}
-
-func (lw *LogWriter)Open(fileName string, logType int, prefix string, flags int) log.Logger {
-	if fileName == "" {
-		if logType == LOGINFO {
-			lw.Writer := os.Stderr
-		} else {
-			lw.Writer := os.Stdout
-		}
-	} else {
-		lw.Writer = os.Create(fileName)
-	}
-
-	return log.New(lw.writer, prefix, flags),
-}
-
-func (lw *LogWriter)Close() {
-	if fileName != "" {
-	lw.Writer.Close()
-	}
-}
-
-
-func NewLogger(infoFile string, errFile) Logger {
+func NewLogger(infoFile string, errFile string) *Logger {
 	return &Logger{
 		infoFile:   infoFile,
 		infoPrefix: "[Info]",
-		infoFlags:  log.lstdFlags,
+		infoFlags:  log.LstdFlags,
 		errFile:    errFile,
 		errPrefix:  "[Error]",
-		errFlags:   log.lstdFlags,
-		logWriter:  NewLogWriter(),
+		errFlags:   log.LstdFlags,
+		writer:     nil,
+		fileOpen:   0,
 	}
+}
+
+func (logger *Logger)OpenWriter(logType int) *log.Logger{
+	var writer io.Writer
+	var prefix string
+	var flags  int
+
+	if logType == LOGINFO {
+		if logger.infoFile == "" {
+			writer = os.Stdout
+		} else {
+			logger.fileOpen = 1
+			writer, _ = os.Create(logger.infoFile)
+		}
+	} else {
+		if logger.errFile == "" {
+			writer = os.Stderr
+		} else {
+			logger.fileOpen = 1
+			writer, _ = os.Create(logger.errFile)
+		}
+	}
+
+	return log.New(writer, prefix, flags)
+}
+
+func (logger *Logger)CloseWriter(logType int) {
+	if logger.fileOpen == 1 {
+		logger.writer.Close()
+	}
+
 }
 
 func (logger *Logger)SetInfoFlags(flags int) {
 	logger.infoFlags = flags
 }
 
-func (loger *Logger)SetErrFlags(flags int) {
+func (logger *Logger)SetErrFlags(flags int) {
 	logger.errFlags = flags
 }
 
@@ -97,14 +101,14 @@ func (logger *Logger)SetErrPrefix(prefix string) {
 }
 
 func (logger *Logger)Info(msg string) {
-	info := logger.logWriter.Open()
-	defer logger.logWriter.Close()
+	info := logger.OpenWriter(LOGINFO)
+	defer logger.CloseWriter(LOGINFO)
 	info.Println(msg)
 }
 
 func (logger *Logger)Error(msg string) {
-	err := logger.logWriter.Open()
-	defer logger.logWriter.Close()
+	err := logger.OpenWriter(LOGERR)
+	defer logger.CloseWriter(LOGERR)
 	err.Println(msg)
 }
 

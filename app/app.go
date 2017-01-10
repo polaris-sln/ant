@@ -5,28 +5,26 @@ import (
 )
 
 type App struct {
-	routes    Route
-	addr      string
 	maxJob    int
 	maxWorker int
 	jobChan   chan Job
 	sigChan   chan SIG
-	workerIds []int{}
+	workerIds []int
 	infoFile  string
 	errFile   string
 	logger    *Logger
 }
 
-func NewApp() App {
-	return App{
-		addr:      ":8080",
-		maxJob:    1000,
-		maxWorker: 1,
-		infoFile:  "",
-		errFilei:  "",
-		jobChan:   make(Job chan, 1000),
-		routes:    nil,
-		logger:    nil,
+func NewApp() *App {
+	return &App{
+		maxJob:     1000,
+		maxWorker:  1,
+		infoFile:   "",
+		errFile:    "",
+	        workerIds: []int{},
+		logger:     nil,
+		jobChan:    make(chan Job, 1000),
+		sigChan:    make(chan SIG, 10),
 	}
 }
 
@@ -55,23 +53,15 @@ func (app *App)SetMaxWorker(amount int) {
 	app.maxWorker = amount
 }
 
-func (app *App)SetAddr(addr string) {
-	app.addr = addr
-}
-
-func (app *App)SetRoutes(routes Route) {
-	app.routes = routes
-}
-
 func (app *App)log(lt int, msg string) {
-	app.jobChan <-NewLogMsg(LOGINFO, fmt.Sprint(msg...) app.logger)
+	app.jobChan <-NewLogMsg(lt, msg, app.logger)
 }
 
-func (app *App)LogInfo(msg ...string) {
+func (app *App)LogInfo(msg ...interface{}) {
 	app.log(LOGINFO, fmt.Sprint(msg...))
 }
 
-func (app *App)LogErr(msg ...string) {
+func (app *App)LogErr(msg ...interface{}) {
 	app.log(LOGERR, fmt.Sprint(msg...))
 }
 
@@ -84,7 +74,7 @@ func (app *App)newWorker() {
 
 }
 
-func (app *App)dispatch(job Job) {
+func (app *App)Dispatch(job Job) {
 	app.jobChan <- job
 }
 
