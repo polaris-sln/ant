@@ -3,7 +3,6 @@ package web
 import (
 	"net/http"
 	"io"
-	"regexp"
 )
 
 type HandlerJob struct {
@@ -35,7 +34,7 @@ func NewHandlerJob(handler Handler) *HandlerJob {
 func (hr *HandlerJob)Do() {
 	method := hr.handler.Method()
 	switch method {
-	case "Get":     hr.handler.Get()
+	case "GET":     hr.handler.Get()
 	case "POST":    hr.handler.Post()
 	case "PUT":     hr.handler.Put()
 	case "HEAD":    hr.handler.Head()
@@ -130,62 +129,5 @@ func (handler *BaseHandler)SetStatusCode(code int) {
 
 func (handler *BaseHandler)SetHeader(key string, value string){
 	handler.responseWriter.Header().Set(key, value)
-}
-
-type Router struct {
-	routes Routes
-}
-
-func NewRouter(routes Routes) *Router {
-	return &Router{routes,}
-}
-
-func (router *Router)SetRoutes(routes Routes) {
-	router.routes = routes
-}
-
-func (router *Router)Route(rw http.ResponseWriter, req *http.Request) Handler {
-	for pattern, handler := range router.routes {
-		re := regexp.MustCompile(pattern)
-		if re.MatchString(req.URL.Path) {
-			handler.SetResponseWriter(rw)
-			handler.SetRequest(req)
-			return handler
-		}
-	}
-	handler := new(NotFoundHandler)
-	handler.SetResponseWriter(rw)
-	handler.SetRequest(req)
-	return handler
-}
-
-
-type Server struct {
-	addr    string
-	keyFile string
-	certFile string
-	tls     bool
-}
-
-func NewServer(addr string, tls bool, keyFile ...string) *Server{
-	var kf string
-	var cf string
-
-	if len(keyFile) == 1{
-		kf = keyFile[0]
-		cf = keyFile[1]
-	} else {
-		kf = ""
-		cf = ""
-	}
-	return &Server{addr, kf, cf, tls,}
-}
-
-func (server *Server)Do() {
-	if server.tls {
-		http.ListenAndServeTLS(server.addr, server.certFile, server.keyFile, nil)
-	} else {
-		http.ListenAndServe(server.addr, nil)
-	}
 }
 

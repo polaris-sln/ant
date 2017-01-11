@@ -4,6 +4,11 @@ import (
 	"fmt"
 )
 
+type Runner interface {
+	Run()
+	SetApp(app *App)
+}
+
 type App struct {
 	maxJob    int
 	maxWorker int
@@ -74,10 +79,17 @@ func (app *App)newWorker() {
 
 }
 
+func (app *App)initLogger() {
+	app.logger = NewLogger(app.infoFile, app.errFile)
+}
+
 func (app *App)Dispatch(job Job) {
 	app.jobChan <- job
 }
 
-func (app *App)Run() {
-
+func (app *App)Run(runner Runner) {
+	app.initLogger()
+	go app.newWorker()
+	runner.SetApp(app)
+	runner.Run()
 }

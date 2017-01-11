@@ -1,6 +1,5 @@
 package app
 
-
 type Worker struct {
 	id      int
 	jobChan chan Job
@@ -22,12 +21,12 @@ func NewWorker(app *App, id int) Worker {
 func (worker *Worker)Start() {
 	for {
 		select {
-			case job := <-worker.jobChan:
-				job.Do()
-			case sig := <-worker.sigChan:
-				worker.SigHandler(sig)
-			case <-worker.quit:
-				return
+		case job := <-worker.jobChan:
+			job.Do()
+		case sig := <-worker.sigChan:
+			worker.SigHandler(sig)
+		case <-worker.quit:
+			return
 		}
 	}
 }

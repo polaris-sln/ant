@@ -4,11 +4,17 @@ TEST_SERVER_TARGET 	= testServer
 TEST_CLIENT_PATH 	= ./tests/testClient
 TEST_CLIENT_TARGET 	= $(TEST_CLIENT_PATH)/test.py
 
+APP_PATH		= ./app
 WEB_PATH		= ./web
 UTILS_PATH		= ./utils
 
 .PHONY:install
-install: install_web install_utils
+install: install_web install_utils install_app
+
+.PHONY:install_app
+install_app:
+	@echo "Insalling app ..."
+	@go install $(APP_PATH)
 
 .PHONY:install_web
 install_web:

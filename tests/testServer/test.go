@@ -1,24 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"net/http"
+	"github.com/tor4z/ant/app"
 	"github.com/tor4z/ant/web"
 )
 
-var routes web.Route = web.Route{
-	"/hello": helloHandler,
+var routes web.Routes = web.Routes{
+	"/hello": new(HelloHandler),
 }
 
-func helloHandler(rw http.ResponseWriter, req *http.Request) {
-	fmt.Println("helloS");
-	io.WriteString(rw, "hello")
-	fmt.Println("helloE");
+type HelloHandler struct{
+	web.BaseHandler
+}
+
+func (h *HelloHandler)Get() {
+	h.Send("hello")
 }
 
 func main() {
-	fmt.Println("Testing");
-	web.Start(":8080", routes)
-	fmt.Println("end");
+	app := app.NewApp()
+	serve := web.NewServe(":8080")
+	serve.SetRoute(routes)
+	app.Run(serve)
 }

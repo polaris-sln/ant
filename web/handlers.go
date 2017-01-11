@@ -5,7 +5,7 @@ import (
 )
 
 type NotFoundHandler struct {
-	Handler
+	BaseHandler
 }
 
 func (h *NotFoundHandler)Get() {
