@@ -4,11 +4,6 @@ import (
 	"fmt"
 )
 
-type Runner interface {
-	Run()
-	SetApp(app *App)
-}
-
 type App struct {
 	maxJob    int
 	maxWorker int
@@ -18,6 +13,7 @@ type App struct {
 	infoFile  string
 	errFile   string
 	logger    *Logger
+	quit      chan SIG
 }
 
 func NewApp() *App {
@@ -26,7 +22,7 @@ func NewApp() *App {
 		maxWorker:  1,
 		infoFile:   "",
 		errFile:    "",
-	        workerIds: []int{},
+	        workerIds:  []int{},
 		logger:     nil,
 		jobChan:    make(chan Job, 1000),
 		sigChan:    make(chan SIG, 10),
@@ -84,12 +80,20 @@ func (app *App)initLogger() {
 }
 
 func (app *App)Dispatch(job Job) {
+	job.SetApp(app)
 	app.jobChan <- job
 }
 
-func (app *App)Run(runner Runner) {
+func (app *App)Run() {
 	app.initLogger()
 	go app.newWorker()
-	runner.SetApp(app)
-	runner.Run()
+	for {
+		select{
+		case <- app.quit: return
+		}
+	}
+}
+
+func (app *App)Stop() {
+	app.quit <- SIGQUIT
 }

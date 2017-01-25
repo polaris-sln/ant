@@ -57,13 +57,15 @@ func (serve *Serve)Route(rw http.ResponseWriter, req *http.Request) {
 	go serve.app.LogInfo(msg)
 }
 
-func (serve *Serve)Run() {
+func (serve *Serve)Do() {
 	http.HandleFunc("/", serve.Route)
+	fmt.Println("serve start ")
 	if serve.tls {
 		http.ListenAndServeTLS(serve.addr, serve.certFile,
 		                       serve.keyFile, nil)
 	} else {
 		http.ListenAndServe(serve.addr, nil)
 	}
+	fmt.Println("serve exit")
 }
 

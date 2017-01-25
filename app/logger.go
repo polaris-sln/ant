@@ -26,10 +26,11 @@ type LogMsg struct {
 	logType int
 	msg     string
 	logger  *Logger
+	app        *App
 }
 
 func NewLogMsg(logType int, msg string, logger *Logger) *LogMsg {
-	return &LogMsg{logType, msg, logger,}
+	return &LogMsg{logType, msg, logger, nil}
 }
 
 func (lm *LogMsg)Do() {
@@ -38,6 +39,10 @@ func (lm *LogMsg)Do() {
 	} else if lm.logType == LOGERR{
 		lm.logger.Error(lm.msg)
 	}
+}
+
+func (lm *LogMsg)SetApp(app *App) {
+	lm.app = app
 }
 
 func NewLogger(infoFile string, errFile string) *Logger {

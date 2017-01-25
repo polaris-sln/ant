@@ -1,5 +1,9 @@
 package app
 
+import (
+	"fmt"
+)
+
 type Worker struct {
 	id      int
 	jobChan chan Job
@@ -19,6 +23,8 @@ func NewWorker(app *App, id int) Worker {
 }
 
 func (worker *Worker)Start() {
+	fmt.Println("worker started")
+	worker.Log(LOGINFO, "worker started")
 	for {
 		select {
 		case job := <-worker.jobChan:

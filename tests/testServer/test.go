@@ -21,5 +21,7 @@ func main() {
 	app := app.NewApp()
 	serve := web.NewServe(":8080")
 	serve.SetRoute(routes)
-	app.Run(serve)
+	app.SetMaxWorker(5)
+	app.Dispatch(serve)
+	app.Run()
 }
